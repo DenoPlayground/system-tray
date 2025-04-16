@@ -11,7 +11,7 @@ const lib = Deno.dlopen("./src/binaries/win32/main.dll", {
 const leftClickCallback = new Deno.UnsafeCallback(
   { parameters: [], result: "void" },
   () => {
-    console.log("Tray Icon wurde links geklickt!");
+    console.log("✅ Tray Icon wurde links geklickt!");
   }
 );
 
@@ -19,7 +19,7 @@ const leftClickCallback = new Deno.UnsafeCallback(
 const rightClickCallback = new Deno.UnsafeCallback(
   { parameters: [], result: "void" },
   () => {
-    console.log("Tray Icon wurde rechts geklickt!");
+    console.log("✅ Tray Icon wurde rechts geklickt!");
   }
 );
 
@@ -27,20 +27,18 @@ const rightClickCallback = new Deno.UnsafeCallback(
 lib.symbols.SetLeftClickCallback(leftClickCallback.pointer);
 lib.symbols.SetRightClickCallback(rightClickCallback.pointer);
 
-// Tray-Icon hinzufügen
+// Tray-Icon anzeigen
 lib.symbols.AddTrayIcon();
 
-// Nachrichtenschleife starten
-queueMicrotask(() => {
-  lib.symbols.RunMessageLoop();
-});
+// Message Loop im Hintergrund starten
+lib.symbols.RunMessageLoop();
 
-// Tray-Icon und Loop nach 10 Sekunden beenden
+// Nach 10 Sekunden: alles wieder aufräumen
 setTimeout(() => {
-  lib.symbols.QuitMessageLoop();
-  lib.symbols.RemoveTrayIcon();
-  leftClickCallback.close();
+  lib.symbols.QuitMessageLoop();         // Loop stoppen
+  lib.symbols.RemoveTrayIcon();          // Tray-Icon entfernen
+  leftClickCallback.close();             // Callbacks schließen
   rightClickCallback.close();
-  lib.close();
-  console.log("Tray-Icon entfernt und Ressourcen freigegeben.");
+  lib.close();                           // DLL entladen
+  console.log("🧹 Tray-Icon entfernt und Ressourcen freigegeben.");
 }, 10000);
